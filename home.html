@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Flexible pricing model for your needs</title>
+
+    <script src="https://www.amcharts.com/lib/3/ammap.js"></script>
+    <script src="https://www.amcharts.com/lib/3/maps/js/worldLow.js"></script>
+    <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <script src="js/jquery.validate.min.js"></script>
+    <script src="js/intlTelInput-jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/custom.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/intlTelInput.css">
+
+</head>
+
+<body>
+    <div id="wrapper">
+        <h1 class="title">Flexible pricing model for your needs</h1>
+        <p class="sub_title">Select your countries on the map to begin</p>
+
+        <div id="mapDiv"></div>
+
+        <p class="country_error"></p>
+
+        <p class="Choose">Choose your SMS services for the selected countries to get an estimates</p>
+
+        <form id="selected">
+
+            <div id="service">
+                <p>SMS Services:</p>
+
+                <div class="form-group">
+                    <input type="radio" name="send" id="send" value="sendSms">
+                    <label for="send">Send messages</label>
+                </div>
+
+                <div class="form-group">
+                    <input type="radio" name="send" id="recieve" value="recieveSms">
+                    <label for="recieve">Recieve messages</label>
+                </div>
+            </div>
+            <span class="error"></span>
+
+            <div id="selected_list"></div>
+            <a href="javascript:void(0);" id="estimateBtn" class="btn">GET ESTIMATES</a>
+        </form>
+
+        <div class="estimates">
+            <div class="estimated_cost">
+                <div class="send_msg">
+                    <p class="msg_title">Send messages at</p>
+                    <p class="price outBound">$0.0050</p>
+                    <p class="sub_tag">estimated cost</p>
+                </div>
+                <div class="recieve_msg">
+                    <p class="msg_title">Recieve messages at</p>
+                    <p class="price inBound">$0.0050</p>
+                    <p class="sub_tag">estimated cost</p>
+                </div>
+            </div>
+            <div class="rangeInput">
+                <input type="hidden" name="cost" value="" id="cost">
+                <input type="range" name="range" max="3250" min="1" value="2000">
+                <input type="hidden" name="cost" value="" id="costSms">
+                <input type="range" name="range1" max="3250" min="1" value="2000">
+
+                <ul class="rangeLabel">
+                    <li>1-500</li>
+                    <li>500-1000</li>
+                    <li>1000-2000</li>
+                    <li>2000+</li>
+                </ul>
+                <div id="demo"></div>
+            </div>
+
+            <div class="btnStack">
+                <a href="https://www.plivo.com/sms/pricing" target="_blank" class="btn view">VIEW PRICING</a>
+                <a href="javascript:void(0);" class="btn contact_sales">CONTACT SALES</a>
+            </div>
+
+        </div>
+
+        <div class="contact_form">
+            <form id="contact" target="_self" onsubmit="return postToGoogle();" action="" autocomplete="">
+                <div class="formStack">
+                    <div class="form-row" style="padding-right: 1.2rem;">
+                        <label for="firstName">First Name</label>
+                        <input id="firstName" type="text" placeholder="Jane" name="entry.2007116043">
+                    </div>
+                    <div class="form-row">
+                        <label for="lastName">Last Name</label>
+                        <input id="lastName" type="text" placeholder="Doe" name="entry.1582100141">
+                    </div>
+
+                </div>
+                <div class="emailForm">
+                    <div class="form-row">
+                        <label for="email">Work Email</label>
+                        <input id="email" type="text" placeholder="Doe" name="entry.25827340" data-pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+                    </div>
+                </div>
+
+                <div class="phoneNumber">
+                    <label for="phone">Phone Number</label>
+                    <input id="phone" type="tel" placeholder="88888 88888" name="entry.1811453956" maxlength="10">
+                    <input type="hidden" id="code" name="code" value="1">
+                </div>
+
+                <div class="descp_form">
+                    <label for="textarea">Description</label>
+                    <textarea name="entry.462259822" id="textarea" rows="5" cols="200" placeholder="Please tell us about your requirements in detail"></textarea>
+                </div>
+
+                <button class="btn" id="formSubmit" type="submit">CONTACT SALES</button>
+            </form>
+
+        </div>
+
+        <div class="docs_link" style="display: none;">
+            <a href="https://docs.google.com/spreadsheets/d/143-4XOCpZ0FqfXnXz0LY630ZxXPa2PZ3oLRbvSf_gK8/edit#gid=302884144" target="_blank">View Sheet</a>
+        </div>
+
+        <div class="modal" style="display: none;">
+            <div class="modal-body">
+                <p>Thanks for contacting us!</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script type="text/javascript">
+    $('.estimates, .view, .contact_sales, .contact_form').hide();
+
+    var map = AmCharts.makeChart("mapDiv", {
+        "type": "map",
+        "theme": "light",
+        "dataProvider": {
+            "map": "worldLow",
+            "getAreasFromMap": true
+        },
+        "areasSettings": {
+            "color": "#E8EAF1",
+            "outlineColor": "#FFF",
+            "selectedColor": "#2BB031",
+            "rollOverColor": '#BFE7C1',
+            "selectable": true,
+        },
+        "zoomControl": {
+            "zoomControlEnabled": false,
+        },
+        "listeners": [{
+            "event": "clickMapObject",
+            "method": function(e) {
+                if (e.mapObject.objectType !== "MapArea") {
+                    return;
+                }
+                var area = e.mapObject;
+                area.showAsSelected = !area.showAsSelected;
+                e.chart.returnInitialColor(area);
+                //getSelectedCountries();
+
+            }
+        }]
+    });
+
+    
+                $('input[name=range1]').hide();
+    $('#estimateBtn').on('click', function(){
+            if ($('#send').is(':checked')) {
+                getSelectedCountries("outBound");
+                $('input[name=range]').show();
+                $('input[name=range1]').hide();
+            }else if ($('#recieve').is(':checked')) {
+                getSelectedCountries("inBound");
+                $('input[name=range]').hide();
+                $('input[name=range1]').show();
+            }
+    });
+
+
+    function getSelectedCountries(val) {
+
+        var selected = [];
+        for (var i = 0; i < map.dataProvider.areas.length; i++) {
+            if (map.dataProvider.areas[i].showAsSelected) {
+                selected.push(map.dataProvider.areas[i].title);
+            }
+        }
+
+        if (selected.length > 0) {
+            $('.country_error').hide();
+        }
+
+        var lists = "";
+        for (var i = 0; i < selected.length; i++) {
+            lists += '<span class="tags" id="' + selected[i] + '">' + selected[i] + '</span>';
+        }
+        document.getElementById("selected_list").innerHTML = lists;
+
+        getPrice(selected, val);
+
+        if (selected.length <= 0) {
+            $('.country_error').show();
+        }
+
+    }
+
+    function getPrice(selected, val) {
+        var type_sms = val;
+        console.log(type_sms)
+        if(type_sms == "outBound"){
+             $.ajax({
+                type: "GET",
+                url: "plivo.csv",
+                dataType: "text",
+                success: function(data) {
+                    readCSVFile(data, selected, type_sms);
+                }
+            });
+         }else if(type_sms == "inBound") {
+             $.ajax({
+                type: "GET",
+                url: "plivo_sms.csv",
+                dataType: "text",
+                success: function(data) {
+                    readInBound(data, selected, type_sms);
+                }
+            });
+         }
+    }
+    function readInBound(response, selected, sms) {
+        var lines = response.split(/\r\n|\n/);
+        var country = [];
+        var price = [];
+        var obj = {};
+        var totalPrice = [];
+        var sum = 0;
+        var total_cost;
+        for (var i = 0; i < lines.length; i++) {
+            firstColumn = lines[i].split(",")[0];
+            lastColumn = lines[i].split(",")[8];
+            country.push(firstColumn);
+            price.push(lastColumn);
+        }
+
+        country.forEach(function(value, index) {
+            obj[value] = price[index]
+        });
+
+        for (var i = 0; i < selected.length; i++) {
+            var sel_len = selected.length;
+            var total = obj[selected[i]];
+            sum += parseFloat(total);
+            total_cost = ((sum / sel_len)).toFixed(3);
+        }
+
+        if (total_cost > 0) {
+            $('.inBound').text('$' + total_cost);
+            $('#costSms').val(total_cost);
+        } else {
+            $('.inBound').text('$' + 0.00);
+            $('#costSms').val(0);
+        }
+
+        if(sms == "inBound"){
+            rangeCalIn();
+            $("input[name='range1']").on('change', function() {
+                rangeCalIn();
+            });
+        }
+
+    }; 
+    function rangeCalIn() {
+
+        var cost = $("input#costSms").val();
+        var rangeVal = $("input[name='range1']").val();
+        $("input[name='range']").val(rangeVal);
+        var volume = (cost * rangeVal).toFixed(3);
+        $('#demo').text(rangeVal);
+        $('.inBound').text('$' + volume);
+        if (rangeVal > 2900) {
+            $(".view").hide();
+            $(".contact_sales").show();
+        } else {
+            $(".view").show();
+            $(".contact_sales, .contact_form").hide();
+        }
+
+    };
+
+    function readCSVFile(response, selected, sms) {
+        var lines = response.split(/\r\n|\n/);
+        var country = [];
+        var price = [];
+        var obj = {};
+        var totalPrice = [];
+        var sum = 0;
+        var total_cost;
+        for (var i = 0; i < lines.length; i++) {
+            firstColumn = lines[i].split(",")[0];
+            lastColumn = lines[i].split(",")[6];
+            country.push(firstColumn);
+            price.push(lastColumn);
+        }
+
+        country.forEach(function(value, index) {
+            obj[value] = price[index]
+        });
+
+        for (var i = 0; i < selected.length; i++) {
+            var sel_len = selected.length;
+            var total = obj[selected[i]];
+            sum += parseFloat(total);
+            total_cost = ((sum / sel_len)).toFixed(3);
+        }
+
+        if (total_cost > 0) {
+            $('.outBound').text('$' + total_cost);
+            $('#cost').val(total_cost);
+        } else {
+            $('.outBound').text('$' + 0.00);
+            $('#cost').val(0);
+        }
+
+        if(sms == "outBound"){
+            rangeCal();
+            $("input[name='range']").on('change', function() {
+                rangeCal();
+            });
+        }
+
+    };
+
+    function rangeCal() {
+
+        var cost = $("input#cost").val();
+        var rangeVal = $("input[name='range']").val();
+        $("input[name='range1']").val(rangeVal);
+        var volume = (cost * rangeVal).toFixed(3);
+        $('#demo').text(rangeVal);
+        $('.outBound').text('$' + volume);
+        if (rangeVal > 2900) {
+            $(".view").hide();
+            $(".contact_sales").show();
+        } else {
+            $(".view").show();
+            $(".contact_sales, .contact_form").hide();
+        }
+
+    };
+
+
+    $('#estimateBtn').on('click', function() {
+
+        if ($('#service input').is(':checked') && $('#selected_list').children().length > 0) {
+            $('.estimates, .btnStack, .view').slideDown();
+        } else {
+            $('.estimates, .btnStack, .view').hide();
+        }
+
+    });
+
+    // $("#service input").change(function() {
+    //     if ($('#service input').is(':checked')) {$('.error').hide();} else {
+    //         $("#service input").prop("checked", false);
+    //         $('.error').text("Please select SMS service");
+    //         $('.estimates, .btnStack, .view').hide();
+    //     }
+    // });
+
+    $("input#send, input#recieve").on('change', function() {
+        $('.error').hide();
+    });
+
+    $(".contact_sales").on("click", function() {
+        $('.contact_form').slideDown();
+    });
+
+    $("#phone").intlTelInput({
+        separateDialCode: true
+    }).on('countrychange', function(e, countryData) {
+        $("#code").val(($("#phone").intlTelInput("getSelectedCountryData").dialCode));
+    });
+
+    $("#phone").on('change keyup', function() {
+        var sanitized = $(this).val().replace(/[^0-9]/g, '');
+        $(this).val(sanitized);
+    });
+
+    function postToGoogle() {
+        if ($('#contact').valid() !== false) {
+
+            var firstName = $("#firstName").val();
+            var lastName = $("#lastName").val();
+            var email = $("#email").val();
+            var phone = $("#phone").val();
+            var textarea = $("#textarea").val();
+            var codeNum = $("#code").val();
+            var phoneCode = codeNum.concat('-' + phone);
+
+            // console.log(leadData);
+            $.ajax({
+                cache: false,
+                url: 'https://docs.google.com/forms/d/e/1FAIpQLSffQ5kWVCsMoWzPLm-YB7FvshVlLZ3K5IflDm-t7BdG9F3ziA/formResponse?',
+                dataType: 'xml',
+                data: {
+                    "entry.2007116043": firstName,
+                    "entry.1582100141": lastName,
+                    "entry.25827340": email,
+                    "entry.1811453956": phoneCode,
+                    "entry.462259822": textarea
+                },
+                type: 'POST',
+                crossDomain: true,
+                success: function(response) {},
+                error: function(x, y, z) {
+                    $(".modal").fadeIn();
+                    $('.docs_link').show();
+                    $('#contact input, #contact textarea').val('');
+                }
+            });
+        }
+        return false;
+    }
+
+    $('.modal').on('click', function() {
+        $(this).hide();
+    });
+
+    var customErrorMessage = {
+        required_Name: "Please enter your name.",
+        required_lastName: "Please enter your lastname.",
+        valid_lastName: "Please enter a valid lastname.",
+        required_email: "Please enter your email address.",
+        invalid_email: "Please enter a valid email address.",
+        required_phoneNumber: "Please enter your phone number."
+    };
+
+    // Validate inputs on blur
+    $("#contact input[type=text], #contact input[type=tel], #contact input[type=textarea]").on('blur', function() {
+        $(this).valid();
+    });
+
+    $("#contact").validate({
+        rules: {
+            "entry.2007116043": {
+                required: true,
+                maxlength: 50,
+                firstName: true
+            },
+            "entry.1582100141": {
+                required: true,
+                maxlength: 50,
+                lastname: true
+            },
+            "entry.25827340": {
+                required: true,
+                email: true,
+                maxlength: 100
+            },
+            "entry.1811453956": {
+                required: true,
+                minlength: 10,
+                maxlength: 10,
+                phoneNumber: true
+            }
+        },
+        messages: {
+            "firstName": {
+                required: customErrorMessage.required_Name
+            },
+            "lastName": {
+                required: customErrorMessage.required_lastName
+            },
+            "email": {
+                required: customErrorMessage.required_email
+            },
+            "phone": {
+                required: customErrorMessage.required_phoneNumber
+            },
+        }
+    });
+    // Full name validator function
+    $.validator.addMethod("firstName", function(value, element) {
+        return this.optional(element) || /^[a-z][a-z0-9 -]*$/i.test(value);
+    }, "Please enter valid name.");
+
+    // Last name validator function
+    $.validator.addMethod("lastname", function(value, element) {
+        return this.optional(element) || /^[a-z][a-z .'-]*$/i.test(value);
+    }, "Please enter valid Lastname.");
+
+    // Email validator funtion
+    $.validator.addMethod("email", function(value) {
+        return value.match(/^[_A-Za-z0-9-\\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$/);
+    }, "Please enter a valid email address.");
+
+    // Phone number validator
+    $.validator.addMethod("phoneNumber", function(value, element) {
+        return this.optional(element) || /^[2-9][0-9]{1,2}-*\d{3}-*\d{4}$/i.test(value);
+    }, "Please enter valid phone number.");
+</script>
+
+</html>
